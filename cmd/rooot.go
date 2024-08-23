@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log-seeker/cmd/analyzer"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var rootCmd = &cobra.Command{
@@ -25,8 +28,18 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
+	rootCmd.AddCommand(analyzer.AnalyzeLogFormFileCmd)
+}
 
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("log-seeker")
+	viper.AutomaticEnv() // read in environment variables that match
 }
