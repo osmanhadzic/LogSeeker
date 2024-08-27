@@ -17,25 +17,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package main
 
-import (
-	// "fmt"
-	// "log-seeker/cmd/analyzer"
-	// "log-seeker/cmd/parser"
-	// "log-seeker/cmd/report"
-	"log-seeker/cmd"
-)
-
-func main() {
-	// entries, err := parser.ParseLog("logs/sample.log")
-	// if err != nil {
-	// 	fmt.Printf("Error parsing log file: %v\n", err)
-	// 	return
-	// }
-
-	// stats := analyzer.AnalyzeLogs(entries)
-	// report.GenerateReport(stats)
-
-	cmd.Execute()
-}
+[2024-06-28 12:00:00] [INFO] Application started
+[2024-06-28 12:05:00] [WARNING] Low memory warning
+[2024-06-28 12:10:00] [ERROR] Failed to load configuration
+[2024-06-28 12:15:00] [INFO] Processed 1000 records
+[2024-06-28 12:20:00] [INFO] Application stopped
