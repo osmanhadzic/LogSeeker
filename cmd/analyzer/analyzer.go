@@ -28,9 +28,11 @@ import (
 
 type LogStats struct {
     TotalLogs   int
+    DebugLogs   int
     InfoLogs    int
     WarningLogs int
     ErrorLogs   int
+    FatalLogs   int
 }
 
 var AnalyzeLogFormFileCmd = &cobra.Command{
@@ -53,9 +55,11 @@ func analyzeLogFile(command *cobra.Command, args []string) error {
 
 	sates := AnalyzeLogs(enterers)
     fmt.Printf("Total Logs: %d\n", sates.TotalLogs)
+    fmt.Printf("Debug Logs: %d\n", sates.DebugLogs)
     fmt.Printf("Info Logs: %d\n", sates.InfoLogs)
     fmt.Printf("Warning Logs: %d\n", sates.WarningLogs)
     fmt.Printf("Error Logs: %d\n", sates.ErrorLogs)
+    fmt.Printf("Fatal Logs: %d\n", sates.FatalLogs)
 	return nil
 }
 
@@ -64,12 +68,16 @@ func AnalyzeLogs(entries []parser.LogEntry) LogStats {
     for _, entry := range entries {
         stats.TotalLogs++
         switch strings.ToUpper(entry.Level) {
+        case "DEBUG":
+            stats.DebugLogs++
         case "INFO":
             stats.InfoLogs++
         case "WARNING":
             stats.WarningLogs++
         case "ERROR":
             stats.ErrorLogs++
+        case "FATAL":
+            stats.FatalLogs++
         }
     }
     return stats

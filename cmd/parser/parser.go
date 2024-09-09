@@ -28,7 +28,9 @@ import (
 type LogEntry struct {
 	DateTime string
 	Level    string
+	Source string
 	Message  string
+	Metadata string
 }
 
 func ParseLog(filePath string) ([]LogEntry, error) {
@@ -40,16 +42,18 @@ func ParseLog(filePath string) ([]LogEntry, error) {
 
 	var entries []LogEntry
 	scanner := bufio.NewScanner(file)
-	re := regexp.MustCompile(`\[(.*?)\] \[(.*?)\] (.*)`)
+	re := regexp.MustCompile(`\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\]`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		matches := re.FindStringSubmatch(line)
-		if len(matches) == 4 {
+		if len(matches) == 6 {
 			entries = append(entries, LogEntry{
 				DateTime: matches[1],
 				Level:    matches[2],
-				Message:  matches[3],
+				Source:   matches[3],
+				Message:  matches[4],
+				Metadata: matches[5],
 			})
 		}
 	}
