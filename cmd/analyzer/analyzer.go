@@ -44,6 +44,16 @@ var AnalyzeLogFormFileCmd = &cobra.Command{
 	RunE:    analyzeLogFile,
 }
 
+var AnalyzeLogByErrorCodeCmd = &cobra.Command{
+	Use:     "analyze-type-log <file_path> <ERROR>",
+	Short:   "Analyze Log File error log.",
+	Long:    "Analyze Log File by error log. [ERROR]",
+	Example: `log-seeker file-path error-code`,
+	Args:    cobra.ExactArgs(2),
+	RunE:    analyzeLogFileByLogFile,
+}
+
+
 func analyzeLogFile(command *cobra.Command, args []string) error {
 	file_path := args[0]
 
@@ -61,6 +71,32 @@ func analyzeLogFile(command *cobra.Command, args []string) error {
     fmt.Printf("Error Logs: %d\n", sates.ErrorLogs)
     fmt.Printf("Fatal Logs: %d\n", sates.FatalLogs)
 	return nil
+}
+
+func analyzeLogFileByLogFile(command *cobra.Command, args []string) error {
+    file_path := args[0]
+    error_code := args[1]
+
+	enterers, err := parser.ParseLog(file_path);
+
+	if err != nil {
+		return err;
+	}
+    logs := AnalyzeLogsByErrorCode(enterers, error_code)
+    for _, log := range logs {
+        fmt.Println(log)
+    }
+    return nil
+}
+
+func AnalyzeLogsByErrorCode(logs []parser.LogEntry, error_code string) []parser.LogEntry{
+    error_logs := []parser.LogEntry{}
+	for _, log := range logs {
+        if log.Level == error_code {
+            error_logs = append(error_logs, log)
+        }
+    }
+    return error_logs
 }
 
 func AnalyzeLogs(entries []parser.LogEntry) LogStats {
