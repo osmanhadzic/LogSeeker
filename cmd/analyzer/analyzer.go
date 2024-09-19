@@ -20,19 +20,20 @@
 package analyzer
 
 import (
-    "log-seeker/cmd/parser"
-    "strings"
-    "fmt"
-    "github.com/spf13/cobra"
+	"fmt"
+	"github.com/spf13/cobra"
+	"log-seeker/cmd/parser"
+	"strings"
+	"time"
 )
 
 type LogStats struct {
-    TotalLogs   int
-    DebugLogs   int
-    InfoLogs    int
-    WarningLogs int
-    ErrorLogs   int
-    FatalLogs   int
+	TotalLogs   int
+	DebugLogs   int
+	InfoLogs    int
+	WarningLogs int
+	ErrorLogs   int
+	FatalLogs   int
 }
 
 var AnalyzeLogFormFileCmd = &cobra.Command{
@@ -53,68 +54,119 @@ var AnalyzeLogByErrorCodeCmd = &cobra.Command{
 	RunE:    analyzeLogFileByLogFile,
 }
 
-
 func analyzeLogFile(command *cobra.Command, args []string) error {
 	file_path := args[0]
 
-	enterers, err := parser.ParseLog(file_path);
+	enterers, err := parser.ParseLog(file_path)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
 	sates := AnalyzeLogs(enterers)
-    fmt.Printf("Total Logs: %d\n", sates.TotalLogs)
-    fmt.Printf("Debug Logs: %d\n", sates.DebugLogs)
-    fmt.Printf("Info Logs: %d\n", sates.InfoLogs)
-    fmt.Printf("Warning Logs: %d\n", sates.WarningLogs)
-    fmt.Printf("Error Logs: %d\n", sates.ErrorLogs)
-    fmt.Printf("Fatal Logs: %d\n", sates.FatalLogs)
+	fmt.Printf("Total Logs: %d\n", sates.TotalLogs)
+	fmt.Printf("Debug Logs: %d\n", sates.DebugLogs)
+	fmt.Printf("Info Logs: %d\n", sates.InfoLogs)
+	fmt.Printf("Warning Logs: %d\n", sates.WarningLogs)
+	fmt.Printf("Error Logs: %d\n", sates.ErrorLogs)
+	fmt.Printf("Fatal Logs: %d\n", sates.FatalLogs)
 	return nil
 }
 
 func analyzeLogFileByLogFile(command *cobra.Command, args []string) error {
-    file_path := args[0]
-    error_code := args[1]
+	file_path := args[0]
+	error_code := args[1]
 
-	enterers, err := parser.ParseLog(file_path);
+	enterers, err := parser.ParseLog(file_path)
 
 	if err != nil {
-		return err;
+		return err
 	}
-    logs := AnalyzeLogsByErrorCode(enterers, error_code)
-    for _, log := range logs {
-        fmt.Println(log)
-    }
-    return nil
-}
-
-func AnalyzeLogsByErrorCode(logs []parser.LogEntry, error_code string) []parser.LogEntry{
-    error_logs := []parser.LogEntry{}
+	logs := AnalyzeLogsByErrorCode(enterers, error_code)
 	for _, log := range logs {
-        if log.Level == error_code {
-            error_logs = append(error_logs, log)
-        }
-    }
-    return error_logs
+		fmt.Println(log)
+	}
+	return nil
 }
 
+var AnalyzeLogByDateCmd = &cobra.Command{
+	Use:     "analyze-date-log <file_path> <date_time_from> <date_time_to>",
+	Short:   "Analyze Log File by date range.",
+	Long:    "Analyze Log File by date range. [date_time_from] to [date_time_to]",
+	Example: `log-seeker file-path "2024-01-01T00:00:00" "2024-01-02T00:00:00"`,
+	Args:    cobra.ExactArgs(3),
+	RunE:    analyzeLogFileByDate,
+}
+
+func analyzeLogFileByDate(command *cobra.Command, args []string) error {
+	file_path := args[0]
+	date_time_from := args[1]
+	date_time_to := args[2]
+
+	entries, err := parser.ParseLog(file_path)
+	if err != nil {
+		return err
+	}
+
+	logs, err := AnalyzeLogsByDate(entries, date_time_from, date_time_to)
+	if err != nil {
+		return err
+	}
+	for _, log := range logs {
+		fmt.Println(log)
+		fmt.Print("\n")
+	}
+	return nil
+}
+
+func AnalyzeLogsByDate(logs []parser.LogEntry, date_time_from string, date_time_to string) ([]parser.LogEntry, error) {
+	from, err := time.Parse(time.RFC3339, date_time_from)
+	if err != nil {
+		return nil, fmt.Errorf("parsing time from: %w", err)
+	}
+	to, err := time.Parse(time.RFC3339, date_time_to)
+	if err != nil {
+		return nil, fmt.Errorf("parsing time to: %w", err)
+	}
+
+	filtered_logs := []parser.LogEntry{}
+	for _, log := range logs {
+		log_time, err := time.Parse(time.RFC3339, log.DateTime)
+		if err != nil {
+			continue
+		}
+		if log_time.After(from) && log_time.Before(to) {
+			filtered_logs = append(filtered_logs, log)
+		}
+	}
+	return filtered_logs, nil
+}
+
+func AnalyzeLogsByErrorCode(logs []parser.LogEntry, error_code string) []parser.LogEntry {
+	error_logs := []parser.LogEntry{}
+	for _, log := range logs {
+		if log.Level == error_code {
+			error_logs = append(error_logs, log)
+		}
+	}
+	return error_logs
+}
 func AnalyzeLogs(entries []parser.LogEntry) LogStats {
-    stats := LogStats{}
-    for _, entry := range entries {
-        stats.TotalLogs++
-        switch strings.ToUpper(entry.Level) {
-        case "DEBUG":
-            stats.DebugLogs++
-        case "INFO":
-            stats.InfoLogs++
-        case "WARNING":
-            stats.WarningLogs++
-        case "ERROR":
-            stats.ErrorLogs++
-        case "FATAL":
-            stats.FatalLogs++
-        }
-    }
-    return stats
+	stats := LogStats{}
+	for _, entry := range entries {
+		stats.TotalLogs++
+		switch strings.ToUpper(entry.Level) {
+		case "DEBUG":
+			stats.DebugLogs++
+		case "INFO":
+			stats.InfoLogs++
+		case "WARNING":
+			stats.WarningLogs++
+		case "ERROR":
+			stats.ErrorLogs++
+		case "FATAL":
+			stats.FatalLogs++
+		}
+	}
+	return stats
 }
