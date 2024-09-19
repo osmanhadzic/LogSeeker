@@ -54,6 +54,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(analyzer.AnalyzeLogFormFileCmd)
 	rootCmd.AddCommand(analyzer.AnalyzeLogByErrorCodeCmd)
+	rootCmd.AddCommand(analyzer.AnalyzeLogByDateCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
