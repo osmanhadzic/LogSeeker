@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2024 Free Software Foundation Europe e.V. <https://fsfe.org>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+name: Go Build
+
+on:
+    push:
+    # Run on branch/tag creation
+    create:
+    # Run on pull requests
+    pull_request:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Set up Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: '1.22.0'
+
+            - name: Install dependencies
+              run: go mod tidy
+
+            - name: Build
+              run: go build -v .
