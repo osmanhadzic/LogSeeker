@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"log-seeker/cmd/parser"
+	"log-seeker/cmd/report"
 	"strings"
 	"time"
 )
@@ -35,6 +36,8 @@ type LogStats struct {
 	ErrorLogs   int
 	FatalLogs   int
 }
+
+var fileReportPath string
 
 var AnalyzeLogFormFileCmd = &cobra.Command{
 	Use:     "analyze <file_path>",
@@ -64,6 +67,7 @@ func analyzeLogFile(command *cobra.Command, args []string) error {
 	}
 
 	sates := AnalyzeLogs(enterers)
+	
 	fmt.Printf("Total Logs: %d\n", sates.TotalLogs)
 	fmt.Printf("Debug Logs: %d\n", sates.DebugLogs)
 	fmt.Printf("Info Logs: %d\n", sates.InfoLogs)
@@ -82,9 +86,17 @@ func analyzeLogFileByLogFile(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	logs := AnalyzeLogsByErrorCode(enterers, error_code)
-	for _, log := range logs {
-		fmt.Println(log)
+	if fileReportPath != "" {
+        err = report.PrintLogResult(logs, fileReportPath)
+        if err != nil {
+            return err
+        }
+    }else{
+		for _, log := range logs {
+			fmt.Println(log)
+		}
 	}
 	return nil
 }
@@ -98,6 +110,12 @@ var AnalyzeLogByDateCmd = &cobra.Command{
 	RunE:    analyzeLogFileByDate,
 }
 
+func init() {
+    AnalyzeLogFormFileCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+    AnalyzeLogByErrorCodeCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+    AnalyzeLogByDateCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+}
+
 func analyzeLogFileByDate(command *cobra.Command, args []string) error {
 	file_path := args[0]
 	date_time_from := args[1]
@@ -109,12 +127,19 @@ func analyzeLogFileByDate(command *cobra.Command, args []string) error {
 	}
 
 	logs, err := AnalyzeLogsByDate(entries, date_time_from, date_time_to)
-	if err != nil {
-		return err
-	}
-	for _, log := range logs {
-		fmt.Println(log)
-		fmt.Print("\n")
+	if fileReportPath != "" {
+        err = report.PrintLogResult(logs, fileReportPath)
+        if err != nil {
+            return err
+        }
+    }else{
+		if err != nil {
+			return err
+		}
+		for _, log := range logs {
+			fmt.Println(log)
+			fmt.Print("\n")
+		}
 	}
 	return nil
 }
