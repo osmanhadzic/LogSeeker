@@ -1,0 +1,4 @@
+2026-09-24T10:00:00Z,INFO,api,request completed,{"status":200}
+2026-09-24T10:05:00Z,ERROR,worker,job failed,{"job_id":42}
+2026-09-24T10:10:00Z,WARNING,scheduler,retrying task,{"attempt":2}
+2026-09-24T10:15:00Z,FATAL,db,connection lost,{"host":"db-1"}

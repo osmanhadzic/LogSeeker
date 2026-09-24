@@ -1,0 +1,4 @@
+datetime=2026-09-24T10:00:00Z level=INFO source=api message="request completed" metadata={"status":200}
+datetime=2026-09-24T10:05:00Z level=ERROR source=worker message="job failed" metadata={"job_id":42}
+datetime=2026-09-24T10:10:00Z level=WARNING source=scheduler message="retrying task" metadata={"attempt":2}
+datetime=2026-09-24T10:15:00Z level=FATAL source=db message="connection lost" metadata={"host":"db-1"}
