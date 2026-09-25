@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2024 OCode
+ * Copyright 2026 OCode
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"log-seeker/cmd/parser"
 	"log-seeker/cmd/report"
+	"sort"
 	"strings"
 	"time"
 )
@@ -38,6 +39,8 @@ type LogStats struct {
 }
 
 var fileReportPath string
+var logPattern string
+var logFormat string
 
 var AnalyzeLogFormFileCmd = &cobra.Command{
 	Use:     "analyze <file_path>",
@@ -60,7 +63,7 @@ var AnalyzeLogByErrorCodeCmd = &cobra.Command{
 func analyzeLogFile(command *cobra.Command, args []string) error {
 	file_path := args[0]
 
-	enterers, err := parser.ParseLog(file_path)
+	enterers, err := parseLogFileWithConfiguredPattern(file_path)
 
 	if err != nil {
 		return err
@@ -81,7 +84,7 @@ func analyzeLogFileByLogFile(command *cobra.Command, args []string) error {
 	file_path := args[0]
 	error_code := args[1]
 
-	enterers, err := parser.ParseLog(file_path)
+	enterers, err := parseLogFileWithConfiguredPattern(file_path)
 
 	if err != nil {
 		return err
@@ -111,9 +114,20 @@ var AnalyzeLogByDateCmd = &cobra.Command{
 }
 
 func init() {
-    AnalyzeLogFormFileCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
-    AnalyzeLogByErrorCodeCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
-    AnalyzeLogByDateCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+	AnalyzeLogFormFileCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+	AnalyzeLogByErrorCodeCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+	AnalyzeLogByDateCmd.Flags().StringVar(&fileReportPath, "report", "", "Path to save the report file")
+
+	AnalyzeLogFormFileCmd.Flags().StringVar(&logPattern, "pattern", "", "Custom regex pattern with 5 capture groups: datetime, level, source, message, metadata")
+	AnalyzeLogByErrorCodeCmd.Flags().StringVar(&logPattern, "pattern", "", "Custom regex pattern with 5 capture groups: datetime, level, source, message, metadata")
+	AnalyzeLogByDateCmd.Flags().StringVar(&logPattern, "pattern", "", "Custom regex pattern with 5 capture groups: datetime, level, source, message, metadata")
+
+	formats := parser.StandardFormatNames()
+	sort.Strings(formats)
+	formatHelp := fmt.Sprintf("Standard log format preset (%s)", strings.Join(formats, ", "))
+	AnalyzeLogFormFileCmd.Flags().StringVar(&logFormat, "format", "", formatHelp)
+	AnalyzeLogByErrorCodeCmd.Flags().StringVar(&logFormat, "format", "", formatHelp)
+	AnalyzeLogByDateCmd.Flags().StringVar(&logFormat, "format", "", formatHelp)
 }
 
 func analyzeLogFileByDate(command *cobra.Command, args []string) error {
@@ -121,7 +135,7 @@ func analyzeLogFileByDate(command *cobra.Command, args []string) error {
 	date_time_from := args[1]
 	date_time_to := args[2]
 
-	entries, err := parser.ParseLog(file_path)
+	entries, err := parseLogFileWithConfiguredPattern(file_path)
 	if err != nil {
 		return err
 	}
@@ -142,6 +156,22 @@ func analyzeLogFileByDate(command *cobra.Command, args []string) error {
 		}
 	}
 	return nil
+}
+
+func parseLogFileWithConfiguredPattern(filePath string) ([]parser.LogEntry, error) {
+	if logPattern != "" && logFormat != "" {
+		return nil, fmt.Errorf("use either --pattern or --format, not both")
+	}
+
+	if logPattern != "" {
+		return parser.ParseLogWithPattern(filePath, logPattern)
+	}
+
+	if logFormat != "" {
+		return parser.ParseLogWithFormat(filePath, logFormat)
+	}
+
+	return parser.ParseLog(filePath)
 }
 
 func AnalyzeLogsByDate(logs []parser.LogEntry, date_time_from string, date_time_to string) ([]parser.LogEntry, error) {
